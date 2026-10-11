@@ -1,0 +1,504 @@
+// SENTINEL X — Database Schema (Prisma)
+// Supports multi-tenancy, granular RBAC, SIEM event ingestion, detection engine, 
+// alert management, incident response, vulnerability management, attack simulation lab, and immutable audit logs.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------------
+// Identity, Multi-Tenancy & Access Control
+// -------------------------------------------------------------
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships       OrganizationMembership[]
+  securityEvents    SecurityEvent[]
+  detectionRules    DetectionRule[]
+  alerts            Alert[]
+  incidents         Incident[]
+  assets            Asset[]
+  applications      Application[]
+  vulnerabilities   VulnerabilityFinding[]
+  threatIndicators  ThreatIndicator[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+  labRuns           LabRun[]
+  securityReports   SecurityReport[]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  title        String?
+  avatarUrl    String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  failedLogins Int       @default(0)
+  lockedUntil  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  memberships       OrganizationMembership[]
+  sessions          UserSession[]
+  assignedAlerts    Alert[]                @relation("AssignedAlerts")
+  assignedIncidents Incident[]             @relation("AssignedIncidents")
+  assignedVulns     VulnerabilityFinding[] @relation("AssignedVulns")
+  assignedTasks     IncidentTask[]         @relation("AssignedTasks")
+  labRuns           LabRun[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+}
+
+model OrganizationMembership {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  role           String       // SUPER_ADMIN, SECURITY_ADMIN, SOC_ANALYST, SECURITY_ENGINEER, DEVELOPER, AUDITOR, LAB_USER
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model UserSession {
+  id           String    @id @default(cuid())
+  userId       String
+  tokenHash    String    @unique
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+// -------------------------------------------------------------
+// Security Event Ingestion & Normalization
+// -------------------------------------------------------------
+
+model SecurityEvent {
+  id             String   @id @default(cuid())
+  timestamp      DateTime @default(now())
+  organizationId String
+  sourceType     String   // AUTH_SERVICE, API_GATEWAY, HOST_AGENT, APPLICATION, LAB_SIMULATION, NETWORK_FIREWALL
+  sourceIdentifier String // server-01, auth-pod-4a, public-api
+  eventCategory  String   // AUTH_SUCCESS, AUTH_FAILURE, ACCOUNT_LOCKOUT, PRIVILEGE_ESCALATION, API_RATE_LIMIT, SUSPICIOUS_ADMIN, SUSPICIOUS_NETWORK
+  severity       String   // INFORMATIONAL, LOW, MEDIUM, HIGH, CRITICAL
+  actorIdentity  String?  // user@sentinel.internal, anonymous, service-worker
+  targetResource String?  // /api/v1/admin/users, db-prod-primary, /login
+  sourceIp       String?  // 192.168.1.100, 10.0.4.12
+  correlationId  String?  // traces multiple related events
+  eventDetails   String   // JSON string of structured metadata
+  processingStatus String @default("PROCESSED") // PENDING, PROCESSED, CORRELATED, ARCHIVED
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  alertEvents  AlertEvent[]
+
+  @@index([organizationId, timestamp])
+  @@index([eventCategory])
+  @@index([severity])
+  @@index([correlationId])
+  @@index([sourceIp])
+}
+
+// -------------------------------------------------------------
+// SIEM-Inspired Detection Engine
+// -------------------------------------------------------------
+
+model DetectionRule {
+  id              String   @id @default(cuid())
+  organizationId  String
+  name            String
+  description     String
+  ruleCategory    String   // AUTH_ANOMALY, PRIVILEGE_ABUSE, NETWORK_THREAT, RATE_VIOLATION, LAB_SIMULATION
+  severity        String   // INFORMATIONAL, LOW, MEDIUM, HIGH, CRITICAL
+  enabled         Boolean  @default(true)
+  mitreTechniqueId String? // e.g. T1110.001 (Brute Force: Password Guessing)
+  mitreTactic     String?  // Credential Access, Defense Evasion, Privilege Escalation
+  detectionLogic  String   // JSON representation of deterministic threshold & conditions
+  evalWindowSecs  Int      @default(300) // 5 minutes window
+  threshold       Int      @default(5)
+  lastExecutionAt DateTime?
+  alertCount      Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  alerts       Alert[]
+
+  @@index([organizationId, enabled])
+}
+
+// -------------------------------------------------------------
+// Alert Management
+// -------------------------------------------------------------
+
+model Alert {
+  id                  String   @id @default(cuid())
+  organizationId      String
+  detectionRuleId     String?
+  incidentId          String?
+  assignedToUserId    String?
+  title               String
+  description         String
+  severity            String   // INFORMATIONAL, LOW, MEDIUM, HIGH, CRITICAL
+  status              String   @default("NEW") // NEW, ACKNOWLEDGED, INVESTIGATING, RESOLVED, FALSE_POSITIVE
+  affectedAsset       String?
+  potentialImpact     String?
+  evidenceSummary     String?
+  investigationNotes  String?
+  recommendedDefense  String?
+  falsePositiveReason String?
+  acknowledgedAt      DateTime?
+  resolvedAt          DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  detectionRule  DetectionRule?  @relation(fields: [detectionRuleId], references: [id], onDelete: SetNull)
+  incident       Incident?       @relation(fields: [incidentId], references: [id], onDelete: SetNull)
+  assignedToUser User?           @relation("AssignedAlerts", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  alertEvents    AlertEvent[]
+
+  @@index([organizationId, status])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+model AlertEvent {
+  id        String   @id @default(cuid())
+  alertId   String
+  eventId   String
+  createdAt DateTime @default(now())
+
+  alert Alert         @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  event SecurityEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([alertId, eventId])
+  @@index([alertId])
+  @@index([eventId])
+}
+
+// -------------------------------------------------------------
+// Incident Response Center
+// -------------------------------------------------------------
+
+model Incident {
+  id                 String   @id @default(cuid())
+  referenceNumber    String   @unique // e.g., INC-2026-0042
+  organizationId     String
+  title              String
+  description        String
+  severity           String   // LOW, MEDIUM, HIGH, CRITICAL
+  status             String   @default("OPEN") // OPEN, TRIAGED, INVESTIGATING, CONTAINMENT, ERADICATION, RECOVERY, CLOSED
+  assignedToUserId   String?
+  affectedAssets     String?  // Comma or JSON array of asset identifiers
+  rootCause          String?
+  remediationSummary String?
+  closureSummary     String?
+  containedAt        DateTime?
+  closedAt           DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  organization   Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignedToUser User?                    @relation("AssignedIncidents", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  alerts         Alert[]
+  timelineEntries IncidentTimelineEntry[]
+  tasks          IncidentTask[]
+
+  @@index([organizationId, status])
+  @@index([severity])
+}
+
+model IncidentTimelineEntry {
+  id         String   @id @default(cuid())
+  incidentId String
+  actionType String   // STATUS_CHANGE, NOTE_ADDED, CONTAINMENT_ACTION, EVIDENCE_ATTACHED, TASK_COMPLETED
+  title      String
+  details    String
+  actorName  String   // e.g. "Sarah Chen (SOC Analyst)" or "System Correlation Engine"
+  timestamp  DateTime @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, timestamp])
+}
+
+model IncidentTask {
+  id               String    @id @default(cuid())
+  incidentId       String
+  assignedToUserId String?
+  title            String
+  description      String?
+  isCompleted      Boolean   @default(false)
+  completedAt      DateTime?
+  sortOrder        Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  incident       Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  assignedToUser User?    @relation("AssignedTasks", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+
+  @@index([incidentId])
+}
+
+// -------------------------------------------------------------
+// Asset Inventory
+// -------------------------------------------------------------
+
+model Asset {
+  id                   String    @id @default(cuid())
+  organizationId       String
+  name                 String
+  assetType            String    // WEB_APPLICATION, API_SERVICE, DATABASE, SERVER, CONTAINER, REPOSITORY, LAB_ENVIRONMENT
+  environment          String    // DEVELOPMENT, STAGING, PRODUCTION, LAB
+  owner                String
+  criticality          String    // CRITICAL, HIGH, MEDIUM, LOW
+  securityClass        String    // RESTRICTED, CONFIDENTIAL, INTERNAL, PUBLIC
+  description          String?
+  ipAddress            String?
+  hostname             String?
+  lastAssessmentDate   DateTime?
+  lifecycleStatus      String    @default("ACTIVE") // ACTIVE, MAINTENANCE, RETIRED
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  organization    Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vulnerabilities VulnerabilityFinding[]
+
+  @@index([organizationId, assetType])
+  @@index([criticality])
+}
+
+// -------------------------------------------------------------
+// Application Security Center
+// -------------------------------------------------------------
+
+model Application {
+  id              String    @id @default(cuid())
+  organizationId  String
+  name            String
+  repositoryUrl   String?
+  branch          String?   @default("main")
+  framework       String?   // Next.js, FastAPI, Spring Boot, Express
+  tier            String    // TIER_1_CRITICAL, TIER_2_STANDARD, TIER_3_INTERNAL
+  securityScore   Int       @default(85) // 0-100 calculated score
+  lastScanAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  organization    Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vulnerabilities VulnerabilityFinding[]
+
+  @@index([organizationId])
+}
+
+// -------------------------------------------------------------
+// Vulnerability Management
+// -------------------------------------------------------------
+
+model VulnerabilityFinding {
+  id                  String    @id @default(cuid())
+  findingReference    String    @unique // e.g. VULN-2026-104
+  organizationId      String
+  assetId             String?
+  applicationId       String?
+  assignedEngineerId  String?
+  title               String
+  description         String
+  severity            String    // CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL
+  status              String    @default("OPEN") // OPEN, TRIAGED, IN_PROGRESS, FIXED, ACCEPTED_RISK, FALSE_POSITIVE
+  cveId               String?   // e.g. CVE-2024-21626
+  cvssScore           Float?    // e.g. 8.6
+  detectionSource     String    // SEMGREP_SAST, TRIVY_CONTAINER, NPM_AUDIT, OWASP_ZAP, MANUAL_ASSESSMENT, LAB_TRAINING
+  remediationAdvice   String?
+  riskAcceptedReason  String?
+  dueDate             DateTime?
+  verifiedAt          DateTime?
+  discoveredAt        DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  asset            Asset?            @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  application      Application?      @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  assignedEngineer User?             @relation("AssignedVulns", fields: [assignedEngineerId], references: [id], onDelete: SetNull)
+  remediationTasks RemediationTask[]
+
+  @@index([organizationId, status])
+  @@index([severity])
+  @@index([cveId])
+}
+
+model RemediationTask {
+  id              String    @id @default(cuid())
+  vulnerabilityId String
+  title           String
+  description     String?
+  status          String    @default("PENDING") // PENDING, IN_DEVELOPMENT, IN_REVIEW, DEPLOYED_VERIFIED
+  assignedTo      String?
+  targetRelease   String?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  vulnerability VulnerabilityFinding @relation(fields: [vulnerabilityId], references: [id], onDelete: Cascade)
+
+  @@index([vulnerabilityId])
+}
+
+// -------------------------------------------------------------
+// Threat Intelligence
+// -------------------------------------------------------------
+
+model ThreatIndicator {
+  id             String    @id @default(cuid())
+  organizationId String
+  indicatorType  String    // IP_ADDRESS, DOMAIN, FILE_HASH_SHA256, URL, CVE
+  value          String
+  source         String    // SYNTHETIC_LAB, CIRCL_FEED_SIMULATED, ANALYST_SUBMITTED, CISA_KEV_SIMULATED
+  classification String    // SYNTHETIC_TRAINING, VERIFIED_EXTERNAL, ANALYST_SUBMITTED
+  threatCategory String    // BRUTE_FORCE_NODE, PHISHING_INFRASTRUCTURE, C2_SIMULATION, EXPLOIT_PAYLOAD
+  confidence     Int       @default(80) // 0-100%
+  description    String
+  analystNotes   String?
+  firstSeen      DateTime  @default(now())
+  lastSeen       DateTime  @default(now())
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, indicatorType])
+  @@index([value])
+}
+
+// -------------------------------------------------------------
+// Attack Simulation Lab
+// -------------------------------------------------------------
+
+model LabScenario {
+  id              String   @id @default(cuid())
+  scenarioKey     String   @unique // SCENARIO_BRUTE_FORCE, SCENARIO_PASSWORD_SPRAY, SCENARIO_PRIV_ESC, SCENARIO_WEB_APP, SCENARIO_CHALLENGE
+  title           String
+  description     String
+  category        String   // AUTH_ATTACK, LATERAL_MOVEMENT, PRIVILEGE_ESCALATION, WEB_EXPLOITATION, INVESTIGATION_CHALLENGE
+  mitreTechnique  String   // e.g. T1110.001
+  difficulty      String   // INTRODUCTORY, INTERMEDIATE, ADVANCED
+  syntheticTarget String   // Target synthetic asset/account
+  expectedOutcome String   // What detection alerts should fire
+  educationalSummary String
+  parametersJson  String   // Configurable dials (attempts count, window seconds)
+  createdAt       DateTime @default(now())
+
+  runs LabRun[]
+}
+
+model LabRun {
+  id             String    @id @default(cuid())
+  scenarioId     String
+  organizationId String
+  executedById   String
+  status         String    @default("RUNNING") // RUNNING, COMPLETED, RESET, FAILED
+  eventsCount    Int       @default(0)
+  alertsFired    Int       @default(0)
+  scoreAchieved  Int?      // For interactive investigation challenge
+  resultsLog     String    // JSON formatted log of execution & detection response
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  scenario     LabScenario  @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  executedBy   User         @relation(fields: [executedById], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+  @@index([organizationId])
+}
+
+// -------------------------------------------------------------
+// Security Audit Logs & Notifications
+// -------------------------------------------------------------
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  actorId        String?
+  action         String   // USER_LOGIN, ROLE_CHANGED, ALERT_STATUS_UPDATED, INCIDENT_CREATED, VULN_RISK_ACCEPTED, LAB_SIMULATION_EXECUTED, REPORT_EXPORTED
+  entityType     String   // USER, ALERT, INCIDENT, VULNERABILITY, DETECTION_RULE, LAB_RUN
+  entityId       String
+  requestId      String?
+  sourceIp       String?
+  safeMetadata   String   // JSON string of sanitized before/after payload
+  result         String   @default("SUCCESS") // SUCCESS, FAILURE, DENIED
+  timestamp      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor        User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, timestamp])
+  @@index([action])
+  @@index([entityType, entityId])
+}
+
+model Notification {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  title          String
+  message        String
+  priority       String   // LOW, MEDIUM, HIGH, CRITICAL
+  resourceType   String?  // ALERT, INCIDENT, VULNERABILITY, LAB_RUN
+  resourceId     String?
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+}
+
+// -------------------------------------------------------------
+// Security Reports
+// -------------------------------------------------------------
+
+model SecurityReport {
+  id             String   @id @default(cuid())
+  organizationId String
+  reportType     String   // EXECUTIVE_SUMMARY, VULNERABILITY_ASSESSMENT, INCIDENT_INVESTIGATION, REMEDIATION_PROGRESS
+  title          String
+  periodStart    DateTime
+  periodEnd      DateTime
+  summaryText    String
+  reportDataJson String   // Structured findings, severity metrics, and recommendations
+  generatedBy    String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+}

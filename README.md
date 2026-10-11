@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SENTINEL X — Cybersecurity Operations & Threat Intelligence Platform
 
-## Getting Started
+SENTINEL X is an enterprise-grade, portfolio-worthy cybersecurity operations platform combining modern SOC monitoring, a SIEM-inspired detection engine, incident response management, vulnerability remediation, asset inventories, threat intelligence, and an interactive attack simulation lab.
 
-First, run the development server:
+---
+
+## Key Differentiators & Architectures
+
+1. **Deterministic SIEM Detection Engine**
+   - Ingests normalized security events and evaluates them against rules mapped to the MITRE ATT&CK framework (T1110.001 Brute Force, T1110.003 Password Spraying, T1078 Privilege Escalation, T1499 Rate Violations).
+   - Automatically clusters events and opens alerts with full evidence linkages.
+
+2. **Interactive Attack Simulation Lab (Safe Training Sandboxes)**
+   - Allows analysts to trigger synthetic scenarios (e.g. Hydra-style brute force, distributed password spraying, unauthorized privilege escalation).
+   - Generates synthetic events on RFC-reserved IP addresses (`198.51.100.0/24`) and watches alerts fire in real time.
+
+3. **Multi-Stage Incident Response Workspace**
+   - Active incident tracking across lifecycle states (`OPEN`, `TRIAGED`, `CONTAINMENT`, `CLOSED`).
+   - Chronological forensic timeline and interactive remediation checklists.
+
+4. **Vulnerability Management & Risk Acceptance**
+   - Comprehensive vulnerability ledger with CVSS scoring, CVE references, SAST/SCA sources, and due dates.
+   - Formal Risk Acceptance workflow requiring mandatory technical justifications for audit compliance.
+
+5. **Granular RBAC & Multi-Tenancy**
+   - 7 distinct roles: `SUPER_ADMIN`, `SECURITY_ADMIN`, `SOC_ANALYST`, `SECURITY_ENGINEER`, `DEVELOPER`, `AUDITOR`, and `LAB_USER`.
+   - Real-time role switcher in the bottom navigation for instant live demonstration of permission guards.
+
+6. **Immutable Audit Trail**
+   - Append-only compliance ledger recording logins, alert triage, incident updates, lab runs, and report exports with automated credential redaction.
+
+---
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router), React 19, TypeScript
+- **Database & ORM**: PostgreSQL / SQLite, Prisma ORM
+- **Security & Auth**: JWT HTTP-only sessions, bcrypt password hashing, server-side RBAC
+- **Styling**: Tailwind CSS, Dark Navy SOC theme
+- **Icons**: Lucide React
+
+---
+
+## Quick Start (Local Development)
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Sync database schema
+npx prisma db push
+
+# 3. Seed realistic security data
+npx tsx prisma/seed.ts
+
+# 4. Start the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Seed Accounts (All using password: `SentinelX#2026Secure!`)
 
-## Learn More
+- **Super Admin**: `admin@sentinel.internal`
+- **Security Admin**: `sec-admin@sentinel.internal`
+- **SOC Analyst**: `analyst@sentinel.internal`
+- **Security Engineer**: `engineer@sentinel.internal`
+- **Developer**: `dev@sentinel.internal`
+- **Auditor**: `auditor@sentinel.internal`
+- **Lab User**: `lab@sentinel.internal`
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*(You can also use the interactive dropdown in the lower left navigation to switch roles on the fly).*

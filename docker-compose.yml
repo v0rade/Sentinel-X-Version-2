@@ -1,0 +1,37 @@
+services:
+  sentinel-x:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sentinel-x-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://sentinel:SentinelX_2026_PostgresPass!@postgres:5432/sentinel_db?schema=public
+      - JWT_SECRET=sentinel-x-ultra-secure-key-2026-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: sentinel-x-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=sentinel
+      - POSTGRES_PASSWORD=SentinelX_2026_PostgresPass!
+      - POSTGRES_DB=sentinel_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel -d sentinel_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
