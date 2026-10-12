@@ -16,7 +16,7 @@ export default function DetectionRulesPage() {
 
   async function fetchRules() {
     try {
-      const res = await fetch('/api/v1/detection-rules');
+      const res = await fetch('/api/v1/alerts?type=rules');
       if (res.ok) {
         const json = await res.json();
         setRules(json.data || []);
@@ -35,7 +35,7 @@ export default function DetectionRulesPage() {
   async function toggleRule(ruleId: string, currentEnabled: boolean) {
     setUpdatingId(ruleId);
     try {
-      const res = await fetch('/api/v1/detection-rules', {
+      const res = await fetch('/api/v1/alerts?type=rules', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ruleId, enabled: !currentEnabled }),

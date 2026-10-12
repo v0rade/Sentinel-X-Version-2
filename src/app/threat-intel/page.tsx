@@ -17,7 +17,7 @@ export default function ThreatIntelPage() {
 
   async function fetchIntel() {
     try {
-      const res = await fetch('/api/v1/threat-intel');
+      const res = await fetch('/api/v1/assets?type=threat-intel');
       if (res.ok) {
         const json = await res.json();
         setIndicators(json.data || []);

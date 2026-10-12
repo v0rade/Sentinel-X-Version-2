@@ -5,16 +5,25 @@ import { logAuditEvent } from '@/lib/audit';
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await requireAuth(req, 'alerts:read');
     const { searchParams } = new URL(req.url);
+    const type = searchParams.get('type');
 
+    // Case 1: Fetch Detection Rules
+    if (type === 'rules') {
+      const user = await requireAuth(req, 'events:read');
+      const rules = await prisma.detectionRule.findMany({
+        where: { organizationId: user.organizationId },
+        orderBy: { createdAt: 'asc' },
+      });
+      return NextResponse.json({ data: rules });
+    }
+
+    // Case 2: Default Alerts
+    const user = await requireAuth(req, 'alerts:read');
     const status = searchParams.get('status');
     const severity = searchParams.get('severity');
 
-    const where: any = {
-      organizationId: user.organizationId,
-    };
-
+    const where: any = { organizationId: user.organizationId };
     if (status) where.status = status;
     if (severity) where.severity = severity;
 
@@ -40,14 +49,35 @@ export async function GET(req: NextRequest) {
   } catch (err: any) {
     if (err.message === 'UNAUTHORIZED') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (err.message === 'FORBIDDEN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    return NextResponse.json({ error: 'Failed to retrieve alerts' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to retrieve data' }, { status: 500 });
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
-    const user = await requireAuth(req, 'alerts:manage');
+    const { searchParams } = new URL(req.url);
+    const type = searchParams.get('type');
     const body = await req.json();
+
+    // Case 1: Update Detection Rule
+    if (type === 'rules') {
+      await requireAuth(req, 'alerts:manage');
+      const { ruleId, enabled, threshold, evalWindowSecs } = body;
+
+      const updated = await prisma.detectionRule.update({
+        where: { id: ruleId },
+        data: {
+          ...(enabled !== undefined && { enabled }),
+          ...(threshold !== undefined && { threshold }),
+          ...(evalWindowSecs !== undefined && { evalWindowSecs }),
+        },
+      });
+
+      return NextResponse.json({ success: true, rule: updated });
+    }
+
+    // Case 2: Update Alert
+    const user = await requireAuth(req, 'alerts:manage');
     const { alertId, status, assignedToUserId, notes, falsePositiveReason } = body;
 
     if (!alertId) {
@@ -94,6 +124,6 @@ export async function PATCH(req: NextRequest) {
   } catch (err: any) {
     if (err.message === 'UNAUTHORIZED') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (err.message === 'FORBIDDEN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    return NextResponse.json({ error: 'Failed to update alert' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update record' }, { status: 500 });
   }
 }

@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function checkAuth() {
     try {
-      const res = await fetch('/api/v1/auth/me');
+      const res = await fetch('/api/v1/auth');
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function login(email: string, password: string): Promise<boolean> {
     try {
-      const res = await fetch('/api/v1/auth/login', {
+      const res = await fetch('/api/v1/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function logout() {
-    await fetch('/api/v1/auth/logout', { method: 'POST' });
+    await fetch('/api/v1/auth?action=logout', { method: 'POST' });
     setUser(null);
   }
 
