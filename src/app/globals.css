@@ -1,16 +1,10 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #090d16;
   --foreground: #f1f5f9;
-  --card: #0f172a;
-  --card-foreground: #f8fafc;
-  --border: #1e293b;
-  --primary: #0284c7;
-  --primary-foreground: #ffffff;
-  --accent: #38bdf8;
-  --muted: #64748b;
-  --destructive: #ef4444;
 }
 
 body {
