@@ -6,81 +6,150 @@
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS" />
   <img src="https://img.shields.io/badge/Prisma_ORM-6.19-2D3748?style=for-the-badge&logo=prisma" alt="Prisma" />
   <img src="https://img.shields.io/badge/PostgreSQL-Neon_Serverless-4169E1?style=for-the-badge&logo=postgresql" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Deployment-Vercel-black?style=for-the-badge&logo=vercel" alt="Vercel" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License" />
 </p>
 
-**SENTINEL X** adalah platform operasional keamanan siber (*Cybersecurity Operations Center / SOC*) dan *Threat Intelligence* kelas enterprise yang siap produksi (*production-oriented*). Platform ini dirancang untuk mensimulasikan lingkungan SIEM (*Security Information and Event Management*), manajemen insiden terstruktur, remediasi kerentanan (*Vulnerability Management*), serta menyediakan **Attack Simulation Lab** interaktif dengan data sintetis yang aman tanpa membahayakan infrastruktur nyata.
+---
+
+### 🌐 Live Production Demo
+> **Akses Langsung Platform (Production):**  
+> 🔗 **[https://sentinel-x-version-2.vercel.app](https://sentinel-x-version-2.vercel.app/)**
+> 
+> *Catatan: Anda dapat langsung mengeksplorasi platform menggunakan akun demo bawaan atau mengganti peran melalui switcher RBAC di navigasi kiri bawah.*
 
 ---
 
-## 🌟 Fitur Utama & Arsitektur Sistem
+## 📖 Tentang SENTINEL X
 
-### 1. 📊 Security Operations Center (SOC) Dashboard
-- **Skor Postur Keamanan Transparan**: Perhitungan otomatis metrik postur pertahanan: `100 - (15×Critical Alerts + 10×Critical Vulns + 8×Open Incidents)`.
-- **SLA Metrik Respons**: Perhitungan MTTA (*Mean Time to Acknowledge*) dan MTTR (*Mean Time to Resolve*).
-- **Aliran Telemetri Real-Time**: Stream live log keamanan dari gateway autentikasi, API, dan server.
+**SENTINEL X** adalah platform **Security Operations Center (SOC)**, **Security Information & Event Management (SIEM)**, dan **Threat Intelligence** modern kelas enterprise yang dirancang khusus untuk tim pertahanan siber (Blue Team), IT Administrator, dan Application Security Engineer.
 
-### 2. 🧪 Attack Simulation Lab (Safe Training Sandbox)
-Platform dilengkapi lab latihan interaktif yang mengemulasi serangan siber menggunakan IP sintetis RFC 5737 (`198.51.100.0/24`) secara aman:
-- **Skenario A (Brute Force - T1110.001)**: Menstimulasi percobaan login beruntun Hydra ke akun target hingga akun terkunci (*account lockout*).
-- **Skenario B (Password Spraying - T1110.003)**: Mengemulasi serangan satu IP terhadap banyak akun sekaligus untuk menguji deteksi korelasi multi-akun.
-- **Skenario C (Privilege Escalation - T1078)**: Mengemulasi modifikasi role tak terotorisasi dari `LAB_USER` ke `SUPER_ADMIN`.
-- **Skenario D (Analyst Challenge)**: Tantangan analisis investigasi untuk memilah traffic normal vs serangan tersembunyi.
+Platform ini memadukan alur kerja investigasi keamanan profesional: mulai dari ingestion log telemetri skala besar, mesin korelasi berbasis aturan (SIEM detection engine) yang dipetakan ke **MITRE ATT&CK Framework**, manajemen insiden dengan audit forensik kronologis, hingga remediasi kerentanan dengan alur formal *Risk Acceptance*.
 
-### 3. 🔍 SIEM-Inspired Detection Engine
-- Evaluasi deterministik terhadap log telemetri yang masuk berdasarkan *sliding window* dan ambang batas (*threshold*).
-- Pemetaan langsung ke **MITRE ATT&CK Framework** (Teknik Credential Access, Defense Evasion, Privilege Escalation).
-- Sakelar aktif/nonaktif rule deteksi dan konfigurasi ambang batas secara visual.
-
-### 4. 🚨 Alert Management Center
-- Siklus hidup alert: `NEW` ➔ `ACKNOWLEDGED` ➔ `INVESTIGATING` ➔ `RESOLVED` / `FALSE_POSITIVE`.
-- Filter keparahan (*CRITICAL*, *HIGH*, *MEDIUM*, *LOW*).
-- Analisis bukti digital (*evidence summary*) dan rekomendasi langkah pertahanan.
-
-### 5. 📁 Incident Response Workspace
-- Manajemen insiden formal lengkap dengan nomor referensi (contoh: `INC-2026-0042`).
-- **Forensic Timeline**: Rekam jejak kronologis setiap investigasi dan tindakan pembendungan (*containment*).
-- **Checklist Kesiapan Respons**: Daftar tugas penanganan insiden yang dapat diceklis oleh analis.
-- Catatan investigasi analis (*live note logging*).
-
-### 6. 🐛 Vulnerability Management & Formal Risk Acceptance
-- Pencatatan kerentanan aplikasi dan infrastruktur berbasis skor CVSS v3 dan CVE (contoh: SAST Semgrep, SCA npm audit).
-- **Alur Formal Risk Acceptance**: Persetujuan risiko bisnis yang mewajibkan justifikasi teknis tertulis dan kontrol kompensasi sebelum status disetujui.
-
-### 7. 🛡️ Granular 7-Tier RBAC (Role-Based Access Control)
-Otorisasi sisi server (*server-side permission guard*) untuk 7 peran pengguna:
-1. `SUPER_ADMIN`: Manajemen platform penuh dan isolasi organisasi.
-2. `SECURITY_ADMIN`: Manajemen kebijakan dan integrasi keamanan.
-3. `SOC_ANALYST`: Pemantauan log, triase alert, dan manajemen insiden.
-4. `SECURITY_ENGINEER`: Manajemen kerentanan dan aset infrastruktur.
-5. `DEVELOPER`: Review temuan keamanan aplikasi dan status perbaikan bug.
-6. `AUDITOR`: Akses *read-only* ke audit trail kepatuhan.
-7. `LAB_USER`: Akses ke skenario latihan di lab serangan sintetis.
-
-*(Dilengkapi **Demo Role Switcher** di navigasi kiri bawah untuk berganti peran secara instan saat presentasi/evaluasi portofolio).*
-
-### 8. 📜 Immutable Security Audit Trail
-- Pencatatan buku besar (*ledger*) transaksi keamanan yang *append-only*.
-- Redaksi otomatis terhadap data sensitif seperti password, secret, token, dan hash agar tidak pernah bocor ke log audit.
-
-### 9. 📄 Security Report Generator
-- Ekspor laporan ringkasan eksekutif (*Executive Security Summary*) dan rekam jejak teknis remediasi kerentanan (*Vulnerability Remediation Ledger*).
+Selain itu, platform ini memiliki keunggulan pembeda utama berupa **Attack Simulation Lab** — lingkungan sandbox aman untuk menguji deteksi serangan siber secara interaktif menggunakan data sintetis tanpa risiko bahaya terhadap sistem produksi.
 
 ---
 
-## 💻 Tech Stack
+## 🌟 Fitur Utama & Modul Lengkap
 
-- **Frontend**: Next.js 15.5.27 (App Router), React 19, TypeScript
-- **Styling**: Tailwind CSS v3, PostCSS, Lucide Icons, Dark-Navy SOC High-Contrast Theme
-- **State & Data**: TanStack Query, React Hook Form, Zod
-- **Backend & API**: Next.js API Routes (Serverless Functions), JWT HTTP-Only Cookies, Argon2/Bcrypt
-- **Database**: PostgreSQL (Neon Serverless) / SQLite (Local Dev), Prisma ORM v6.19.3
+### 1. 📊 Security Operations Center (SOC) Dashboard (`/`)
+- **Transparent Security Posture Score**: Metrik skor postur pertahanan yang dihitung secara transparan berbasis temuan riil:
+  $$\text{Score} = 100 - (15 \times \text{Critical Alerts} + 10 \times \text{Critical Vulns} + 8 \times \text{Open Incidents})$$
+- **SLA Respon Kritis**: Pelacakan otomatis **MTTA** (*Mean Time to Acknowledge*) dan **MTTR** (*Mean Time to Resolve*).
+- **Dual Telemetry Streams**: Pemantauan langsung stream alert prioritas tinggi dan stream event log telemetri normalisasi secara berdampingan.
+
+### 2. 🧪 Attack Simulation Lab (Safe Training Sandbox) (`/lab`)
+Lingkungan pelatihan pertahanan siber yang mengemulasi serangan realistis menggunakan alamat IP sintetis dokumentasi privat RFC 5737 (`198.51.100.0/24`, `203.0.113.0/24`):
+- **Skenario A — Brute-Force Password Guessing (T1110.001)**: Mengemulasi serangan Hydra multi-request ke endpoint autentikasi hingga memicu status *Account Lockout* dan alert severity `HIGH`.
+- **Skenario B — Distributed Password Spraying (T1110.003)**: Menguji kemampuan engine SIEM mengelompokkan satu IP penyerang yang mencoba login ke banyak akun internal berbeda.
+- **Skenario C — Privileged Role Modification Anomaly (T1078)**: Mengemulasi eskalasi hak akses ilegal dari akun biasa langsung ke `SUPER_ADMIN`.
+- **Skenario D — Incident Investigation Analyst Challenge**: Tantangan bagi analis untuk menyaring noise lalu lintas normal dan menemukan indikasi kompromi (IoC).
+
+### 3. 🔍 SIEM-Inspired Detection Engine (`/detection-rules`)
+- Mesin deteksi deterministik dengan evaluasi berbasis *sliding window* (jendela waktu geser) dan batas ambang (*threshold*).
+- Pemetaan standar **MITRE ATT&CK** (Credential Access, Privilege Escalation, Defense Evasion, Persistence).
+- Kontrol penuh bagi administrator untuk mengaktifkan/menonaktifkan rule serta mengonfigurasi batas threshold secara dinamis.
+
+### 4. 🚨 Alert Management Center (`/alerts`)
+- Manajemen siklus hidup alert: `NEW` ➔ `ACKNOWLEDGED` ➔ `INVESTIGATING` ➔ `RESOLVED` / `FALSE_POSITIVE`.
+- Filter multi-level berdasarkan tingkat keparahan (*CRITICAL*, *HIGH*, *MEDIUM*, *LOW*).
+- Panel bukti forensik digital (*evidence summary*) yang menautkan event log terkait dan rekomendasi langkah mitigasi pertahanan (*recommended defense*).
+
+### 5. 📁 Incident Response Workspace (`/incidents`)
+- Sistem tiket insiden berstandar industri dengan kode unik (contoh: `INC-2026-0042`).
+- **Forensic Timeline Chronology**: Catatan waktu peristiwa, eskalasi status, dan tindakan pembendungan (*containment actions*).
+- **Interactive Response Checklist**: Daftar tindakan mitigasi sistematis (isolasi host, pemblokiran firewall CIDR, preservasi log forensik).
+- **Analyst Investigation Notes**: Fasilitas pencatatan langsung temuan investigasi oleh analis.
+
+### 6. 🐛 Vulnerability Management & Risk Acceptance (`/vulnerabilities`)
+- Manajemen repositori kerentanan dari berbagai sumber pemindai (SAST Semgrep, SCA npm audit, Container Trivy, manual assessment).
+- Penilaian standar **CVE** dan kalkulasi skor **CVSS v3**.
+- **Formal Risk Acceptance Modal**: Alur persetujuan risiko bisnis yang mewajibkan justifikasi teknis dan kontrol kompensasi tertulis sebelum kerentanan dapat ditandai sebagai *Accepted Risk*.
+
+### 7. 🖥️ Enterprise Asset Inventory (`/assets`)
+- Manajemen inventaris aset: Web Application, API Service, Database Cluster, CI/CD Runner, dan Sandbox Lab Environment.
+- Klasifikasi keamanan data (`RESTRICTED`, `CONFIDENTIAL`, `INTERNAL`) dan status lingkungan (`PRODUCTION`, `DEVELOPMENT`, `STAGING`, `LAB`).
+- Tautan langsung ke temuan kerentanan (*linked vulnerabilities*) per aset.
+
+### 8. 📡 Threat Intelligence Repository (`/threat-intel`)
+- Repositori indikator kompromi / *Indicators of Compromise* (IoC): IP Address, Malicious Domain, File SHA-256 Hash, dan URL.
+- Klasifikasi transparan antara indikator sintetis pelatihan (*Synthetic Training*) dengan indikator terverifikasi eksternal (*Verified External*).
+- Rating tingkat kepercayaan (*Confidence Level* 0–100%) dan catatan analis.
+
+### 9. 📜 Tamper-Resistant Security Audit Trail (`/audit-logs`)
+- Buku besar (*ledger*) kepatuhan dan audit yang bersifat **append-only**.
+- Mencatat seluruh peristiwa autentikasi, perubahan role, triase alert, eksekusi lab, dan ekspor laporan.
+- **Automated Credential Redaction**: Sistem otomatis menyaring dan menyembunyikan parameter sensitif (password, JWT token, authorization header, secret key) sebelum disimpan ke log.
+
+### 10. 📄 Evidence-Based Security Report Generator (`/reports`)
+- Pembuatan laporan keamanan otomatis berbasis data telemetri riil.
+- Mendukung laporan **Executive Security Summary** dan **Technical Vulnerability Remediation Ledger**.
+- Ringkasan temuan kunci, distribusi keparahan, serta langkah rekomendasi strategis bagi pimpinan C-Level.
+
+### 11. 👥 Granular 7-Tier RBAC & Interactive Role Switcher
+Otorisasi ketat di sisi server (*server-side authorization guard*) untuk 7 peran pengguna:
+1. `SUPER_ADMIN`: Kendali penuh platform, isolasi multi-tenant, dan konfigurasi global.
+2. `SECURITY_ADMIN`: Manajemen pengguna organisasi, kebijakan keamanan, dan integrasi.
+3. `SOC_ANALYST`: Pemantauan stream, investigasi alert, dan eskalasi penanganan insiden.
+4. `SECURITY_ENGINEER`: Audit kerentanan aplikasi, integrasi scanner, dan inventaris aset.
+5. `DEVELOPER`: Review temuan keamanan kode dan pelacakan status perbaikan bug.
+6. `AUDITOR`: Akses *read-only* ke audit trail dan laporan kepatuhan sistem.
+7. `LAB_USER`: Akses terbatas untuk menjalankan simulasi serangan di lab pelatihan.
+
+> **💡 Fitur Khusus Penilai Portofolio:** Terdapat dropdown **"Demo RBAC Role"** di pojok kiri bawah navigasi yang memungkinkan penguji berganti peran secara instan tanpa perlu repot logout/login kembali!
 
 ---
 
-## 🚀 Panduan Menjalankan di Komputer Lokal (Localhost)
+## 🔑 Akun Demo Siap Pakai
 
-### 1. Clone Repository & Masuk ke Direktori
+Semua akun terdaftar menggunakan kata sandi default: **`SentinelX#2026Secure!`**
+
+| Peran (Role) | Alamat Email | Nama Petugas | Hak Akses Utama |
+| :--- | :--- | :--- | :--- |
+| **Super Admin** | `admin@sentinel.internal` | Marcus Vance | Seluruh fitur sistem & isolasi tenant |
+| **Security Admin** | `sec-admin@sentinel.internal` | Diana Prince | Manajemen pengguna, role, & kebijakan |
+| **SOC Analyst** | `analyst@sentinel.internal` | Sarah Chen | Analisis telemetri, alert, & insiden *(Default)* |
+| **Security Engineer** | `engineer@sentinel.internal` | Alex Rivera | Manajemen kerentanan, CVE, & aset |
+| **Developer** | `dev@sentinel.internal` | David Kim | Akses perbaikan kode & daftar vuln |
+| **Auditor** | `auditor@sentinel.internal` | Elena Rostova | Inspeksi audit log & laporan (*Read-only*) |
+| **Lab User** | `lab@sentinel.internal` | Trainee Jordan | Akses lab simulasi serangan siber |
+
+---
+
+## 🕹️ Panduan Skenario Pengujian (Hands-On Tour)
+
+Buka link live demo di **[https://sentinel-x-version-2.vercel.app](https://sentinel-x-version-2.vercel.app/)** dan ikuti alur uji berikut:
+
+```
+[1. Eksekusi Lab Simulasi] ──> [2. Deteksi SIEM & Alert] ──> [3. Eskalasi ke Insiden] ──> [4. Mitigasi & Audit Trail]
+```
+
+### Skenario 1: Eksekusi Simulasi & Deteksi Real-Time
+1. Buka menu **Attack Simulation Lab** (`/lab`) di sidebar kiri.
+2. Pada skenario **"Lab A: Brute-Force Password Guessing Simulation"**, klik tombol **"Execute Simulation"**.
+3. Sistem akan menghasilkan paket telemetri kegagalan login berturut-turut.
+4. Mesin deteksi SIEM langsung mencocokkan rule dan menghasilkan alert keparahan **HIGH**.
+5. Buka menu **Alert Center** (`/alerts`) untuk melihat alert baru yang terdaftar lengkap dengan bukti IP penyerang.
+
+### Skenario 2: Investigasi & Respons Insiden
+1. Buka menu **Incident Response** (`/incidents`).
+2. Pilih insiden aktif (misal `INC-2026-0042`).
+3. Tandai tugas penanganan pada **Containment & Eradication Checklist**.
+4. Ketik catatan investigasi baru pada input bawah dan klik **"Log Note"** — perhatikan pembaruan kronologis pada **Investigation Timeline**.
+
+### Skenario 3: Alur Formal Risk Acceptance
+1. Buka menu **Vulnerabilities** (`/vulnerabilities`).
+2. Pilih salah satu temuan kerentanan, lalu klik **"Accept Business Risk..."**.
+3. Isi alasan teknis dan kontrol kompensasi (misal: *Host berada di private subnet terisolasi tanpa akses internet publik*).
+4. Klik **Submit**, lalu buka menu **Audit Trail** (`/audit-logs`) untuk membuktikan bahwa aksi persetujuan risiko tercatat permanen di buku besar audit.
+
+---
+
+## 💻 Panduan Instalasi Lokal (Self-Hosting / Localhost)
+
+Jika Anda ingin menjalankan atau mengembangkan SENTINEL X di komputer lokal:
+
+### 1. Clone Repository
 ```bash
 git clone https://github.com/v0rade/Sentinel-X-Version-2.git
 cd Sentinel-X-Version-2
@@ -91,104 +160,50 @@ cd Sentinel-X-Version-2
 npm install
 ```
 
-### 3. Setup Database Lokal (SQLite Otomatis)
-Pastikan isi file `.env`:
+### 3. Konfigurasi Environment Variable
+Buat atau periksa file `.env` di root project:
 ```env
 DATABASE_URL="file:./dev.db"
 JWT_SECRET="sentinel-x-ultra-secure-key-2026-production"
 ```
 
-Sinkronkan database dan isi data awal:
+### 4. Sinkronisasi Database & Seed Data Awal
 ```bash
-# Sinkronkan tabel keamanan
+# Sinkronkan tabel keamanan Prisma
 npx prisma db push
 
-# Masukkan 7 akun pengguna, SIEM rules, aset, dan skenario lab
+# Masukkan seluruh akun demo, rules deteksi, aset, dan skenario lab
 npx tsx prisma/seed.ts
 ```
 
-### 4. Jalankan Server Dev
+### 5. Jalankan Server Development
 ```bash
 npm run dev
 ```
-Buka browser Anda di **[http://localhost:3000](http://localhost:3000)**.
+Akses platform di **[http://localhost:3000](http://localhost:3000)**.
 
 ---
 
-## ☁️ Panduan Deploy ke Vercel (Produksi Online)
+## 🛠️ Arsitektur & Spesifikasi Teknis
 
-### Langkah 1: Siapkan Database PostgreSQL Gratis di Neon
-1. Buat akun di **[neon.tech](https://neon.tech)** (login via GitHub).
-2. Buat project baru, lalu klik tombol hijau **Connect**.
-3. Centang **Connection Pooling**, lalu salin string koneksi:
-   `postgresql://neondb_owner:PASSWORD@ep-hostname.region.aws.neon.tech/neondb?sslmode=require`
-
-### Langkah 2: Deploy di Vercel
-1. Buka **[vercel.com](https://vercel.com)** ➔ klik **Add New...** ➔ **Project**.
-2. Pilih repository **`Sentinel-X-Version-2`** dan klik **Import**.
-3. Di bagian **Environment Variables**, tambahkan:
-   - **`DATABASE_URL`**: *(Paste connection string Neon dari Langkah 1)*
-   - **`JWT_SECRET`**: `sentinel-x-ultra-secure-key-2026-production`
-4. Ubah `provider` di `prisma/schema.prisma` menjadi `postgresql` jika menghubungkan langsung ke Neon.
-5. Klik **Deploy**!
-
-### Langkah 3: Seed Database Neon dari Laptop Anda
-Jalankan di PowerShell:
-```powershell
-$env:DATABASE_URL="postgresql://neondb_owner:PASSWORD@ep-hostname.neon.tech/neondb?sslmode=require"
-npx prisma db push
-npx tsx prisma/seed.ts
-```
+- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/) dengan server-side rendering dan API routes teroptimasi.
+- **Bahasa**: [TypeScript](https://www.typescriptlang.org/) dengan mode pengetikan ketat (*strict type-checking*).
+- **Styling**: [Tailwind CSS v3](https://tailwindcss.com/) dengan PostCSS, Autoprefixer, dan custom cyber theme.
+- **Database & ORM**: [Prisma ORM](https://www.prisma.io/) v6 dengan dukungan dual-driver: **SQLite** (lokal) dan **PostgreSQL Neon Serverless** (produksi).
+- **Autentikasi & Keamanan**: JWT Session dengan HTTP-Only Cookies, proteksi CSRF, sanitasi metadata audit, dan mitigasi timing-attack pada bcrypt.
+- **Ikonografi**: [Lucide React](https://lucide.dev/).
 
 ---
 
-## 🔑 Akun Demo Siap Pakai
+## 🔒 Prinsip Keamanan & Etika (Zero-Harm Policy)
 
-Semua akun menggunakan password yang sama: **`SentinelX#2026Secure!`**
-
-| Role | Email | Nama Pengguna | Deskripsi Akses |
-| :--- | :--- | :--- | :--- |
-| **Super Admin** | `admin@sentinel.internal` | Marcus Vance | Administrator Sistem & Konfigurasi Global |
-| **Security Admin** | `sec-admin@sentinel.internal` | Diana Prince | Direktur Operasi Keamanan & Kebijakan |
-| **SOC Analyst** | `analyst@sentinel.internal` | Sarah Chen | Analis Investigasi Alert & Insiden *(Default)* |
-| **Security Engineer** | `engineer@sentinel.internal` | Alex Rivera | Manajemen Kerentanan & Penilaian Aset |
-| **Developer** | `dev@sentinel.internal` | David Kim | Review Temuan SAST & Tugas Remediasi |
-| **Auditor** | `auditor@sentinel.internal` | Elena Rostova | Inspeksi Audit Trail Kepatuhan *(Read-only)* |
-| **Lab User** | `lab@sentinel.internal` | Trainee Jordan | Akses Latihan Simulasi Serangan Siber |
-
-> **Tips Presentasi Portofolio:** Anda dapat mengganti role pengguna secara instan tanpa login ulang menggunakan menu dropdown **"Demo RBAC Role"** di pojok kiri bawah navigasi.
-
----
-
-## 📖 Cara Menggunakan & Skenario Uji Coba
-
-1. **Menguji SIEM Detection Engine & Attack Lab**:
-   - Masuk ke menu **Attack Simulation Lab** (`/lab`).
-   - Pilih skenario **"Lab A: Brute-Force Password Guessing Simulation"** lalu klik **"Execute Simulation"**.
-   - Sistem akan menyuntikkan paket telemetri kegagalan login secara beruntun.
-   - Perhatikan kotak hasil di bawah: Rule deteksi akan memicu alert otomatis dengan tingkat keparahan **HIGH**.
-   - Buka menu **Alert Center** (`/alerts`), Anda akan melihat alert brute force baru lengkap dengan bukti IP penyerang dan tombol **Investigate**.
-
-2. **Mengelola Triase Insiden**:
-   - Masuk ke menu **Incident Response** (`/incidents`).
-   - Pilih insiden aktif (misal `INC-2026-0042`).
-   - Ceklis tugas pada **Containment & Eradication Checklist**.
-   - Tambahkan temuan baru pada kolom **Log Note**, dan perhatikan pembaruan kronologis pada **Investigation Timeline**.
-
-3. **Menguji Formal Risk Acceptance**:
-   - Masuk ke menu **Vulnerabilities** (`/vulnerabilities`).
-   - Pada salah satu temuan kerentanan, klik tombol **"Accept Business Risk..."**.
-   - Masukkan alasan justifikasi bisnis dan kontrol kompensasi jaringan (minimal 10 karakter).
-   - Simpan, lalu buka menu **Audit Trail** (`/audit-logs`) untuk memverifikasi bahwa tindakan persetujuan risiko Anda tercatat secara permanen di buku besar audit.
-
----
-
-## 🔒 Kebijakan Keamanan & Prinsip Zero-Harm
-
-Seluruh fitur simulasi serangan, injeksi telemetri, dan deteksi pada SENTINEL X beroperasi **eksklusif pada data sintetis dan alamat IP dokumentasi privat (RFC 5737 / RFC 1918)**. Platform ini **tidak pernah** melakukan pemindaian internet tanpa izin, pencurian kredensial nyata, eksploitasi berbahaya, atau penyebaran malware.
+> [!IMPORTANT]
+> Seluruh fitur simulasi serangan, injeksi telemetri, dan latihan investigasi di platform SENTINEL X beroperasi **secara eksklusif pada data sintetis dan alamat IP dokumentasi privat yang telah dialokasikan (RFC 5737 / RFC 1918)**.
+> 
+> Platform ini **tidak pernah dan dilarang keras** melakukan pemindaian internet terbuka tanpa izin, pencurian kredensial riil, peluncuran payload berbahaya, atau eksploitasi infrastruktur publik.
 
 ---
 
 ## 📜 Lisensi
 
-Didistribusikan di bawah lisensi **MIT**. Bebas digunakan untuk keperluan edukasi, portofolio rekayasa perangkat lunak, dan evaluasi profesional.
+Project ini dilisensikan di bawah **[MIT License](LICENSE)**. Bebas digunakan untuk referensi pembelajaran, evaluasi portofolio rekayasa perangkat lunak, maupun demonstrasi arsitektur keamanan siber.
